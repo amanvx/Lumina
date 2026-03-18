@@ -1,0 +1,581 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lumina | Next-Gen Generative Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+--primary: #1a1a24;
+--text-muted: #5a5a6a;
+--btn-bg: rgba(255, 255, 255, 0.7);
+--btn-border: rgba(255, 255, 255, 0.9);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body, html {
+width: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+background-color: #f7f9fa; min-height: 150vh; height: auto; overflow-x: hidden; -webkit-font-smoothing: antialiased;
+}
+#webgl-canvas {
+position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;
+}
+.hero-container {
+position: relative; width: 100%; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 6rem 5% 4rem;
+}
+.content-wrapper {
+display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 4rem; max-width: 1300px; width: 100%; z-index: 10;
+}
+.text-section { display: flex; flex-direction: column; align-items: flex-start; }
+.text-section h1 { font-size: clamp(3rem, 5.5vw, 5rem); font-weight: 600; color: var(--primary); line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 1.5rem; }
+.text-section p { font-size: clamp(1.1rem, 1.5vw, 1.25rem); color: var(--text-muted); max-width: 520px; line-height: 1.6; margin-bottom: 2.5rem; font-weight: 300; }
+.cta-btn {
+padding: 1rem 2.5rem; font-size: 1rem; font-weight: 500; color: var(--primary); background: var(--btn-bg); border: 1px solid var(--btn-border); border-radius: 50px; cursor: pointer; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.5); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; display: inline-flex; align-items: center; justify-content: center;
+}
+.cta-btn::before {
+content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent); transform: skewX(-20deg); transition: 0.5s;
+}
+.cta-btn:hover { transform: translateY(-4px); background: rgba(255, 255, 255, 0.95); box-shadow: 0 25px 45px rgba(0, 0, 0, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.8); }
+.cta-btn:hover::before { left: 150%; }
+.btn-secondary {
+padding: 1rem 2.5rem; font-size: 1rem; font-weight: 500; color: var(--primary); background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 50px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.4s ease; display: inline-flex; align-items: center; justify-content: center;
+}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.6); }
+.card-section { perspective: 1200px; display: flex; justify-content: center; align-items: center; position: relative; }
+.card-floater { animation: float 6s ease-in-out infinite; will-change: transform; transform-style: preserve-3d; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+@keyframes spin { 100% { transform: translate(-50%, -50%) translateZ(40px) rotate(360deg); } }
+@keyframes pulse { 0% { transform: scale(0.9); opacity: 0.8; } 100% { transform: scale(1.1); opacity: 1; } }
+@media (max-width: 968px) {
+.content-wrapper { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
+.text-section { align-items: center; margin-top: 4rem; }
+.card-section { margin-bottom: 4rem; }
+}
+.shadow-soft-card{ box-shadow: 0 30px 80px -20px rgba(15,23,42,0.08), 0 10px 30px -15px rgba(15,23,42,0.05); }
+.glass-panel{background:rgba(255,255,255,0.4);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.6);box-shadow:0 8px 32px rgba(0,0,0,0.05)}.glass-panel:hover{background:rgba(255,255,255,0.5);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.08)}.orbit-container{animation:spin-orbit 60s linear infinite}.orbit-item{animation:spin-reverse 60s linear infinite}@keyframes spin-orbit{to{transform:rotate(360deg)}}@keyframes spin-reverse{to{transform:rotate(-360deg)}}.marquee-track{display:flex;animation:marquee 30s linear infinite}@keyframes marquee{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}.float-anim{animation:float 6s ease-in-out infinite}
+</style>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/iconify-icon/2.0.0/iconify-icon.min.js"></script>
+</head>
+<body class="text-slate-900">
+    <header id="creative-header" class="fixed top-4 left-0 w-full z-50 px-4 sm:px-6 transition-all duration-300 pointer-events-none">
+      <div class="max-w-6xl mx-auto pointer-events-auto">
+        <div class="relative backdrop-blur-xl bg-white/70 border border-white/40 shadow-[0_8px_30px_rgba(0,0,0,0.04)] rounded-full px-2 py-2 pl-6 flex items-center justify-between transition-all duration-500 hover:bg-white/80 hover:shadow-[0_15px_40px_rgba(0,0,0,0.08)]">
+          <a href="#" class="flex items-center gap-2 group">
+            <span class="font-medium text-slate-800 tracking-tight text-sm uppercase hidden sm:block">Lumina</span>
+          </a>
+          <nav class="hidden md:flex items-center gap-1 absolute left-1/2 -translate-x-1/2">
+            <a href="#" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 uppercase tracking-wider rounded-full hover:bg-white/60 transition-all">Studio</a>
+            <a href="#" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 uppercase tracking-wider rounded-full hover:bg-white/60 transition-all">Models</a>
+            <a href="#" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 uppercase tracking-wider rounded-full hover:bg-white/60 transition-all">Workflows</a>
+            <a href="#" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 uppercase tracking-wider rounded-full hover:bg-white/60 transition-all">Showcase</a>
+            <a href="#" class="px-4 py-2 text-xs font-medium text-slate-500 hover:text-slate-900 uppercase tracking-wider rounded-full hover:bg-white/60 transition-all">Pricing</a>
+          </nav>
+          <div class="flex items-center gap-2">
+            <a href="#" class="hidden sm:inline-flex items-center justify-center px-6 py-2.5 text-xs font-medium text-white uppercase tracking-widest bg-slate-900 rounded-full hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10 hover:shadow-xl hover:shadow-slate-900/20 hover:-translate-y-0.5">Start Creating</a>
+            <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-slate-600 hover:bg-white/60 transition-colors focus:outline-none">
+              <iconify-icon id="menu-icon" icon="solar:hamburger-menu-linear" width="20" height="20" style="stroke-width: 1.5;"></iconify-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <section class="hero-container">
+      <div class="content-wrapper">
+        <div class="text-section">
+          <h1 class="tracking-tight">Limitless<br>Creation.</h1>
+          <p>Generate stunning visual assets, cinematic videos, and dynamic audio from one unified, AI-powered studio environment.</p>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4 items-start">
+            <button class="cta-btn">Open Canvas</button>
+            <button class="px-6 py-3 rounded-full text-sm font-medium text-slate-700 bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_10px_30px_rgba(0,0,0,0.05),inset_0_1px_0_rgba(255,255,255,0.9)] hover:bg-white/60 hover:shadow-[0_15px_40px_rgba(0,0,0,0.08)] transition-all duration-300">View Gallery</button>
+          </div>
+        </div>
+
+        <div class="card-section relative w-full h-[600px]">
+          <div class="absolute inset-0 bg-purple-400/20 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+          
+          <div class="relative w-full max-w-md mx-auto aspect-[4/5] card-floater">
+            <div class="absolute top-[10%] left-[-10%] w-[70%] h-[70%] bg-gradient-to-br from-indigo-500/40 to-purple-500/40 backdrop-blur-lg rounded-3xl border border-white/30 shadow-2xl" style="transform: rotateY(15deg) rotateZ(-10deg) translateZ(-50px);"></div>
+            
+            <div class="absolute top-[15%] right-[-10%] w-[65%] h-[65%] bg-gradient-to-br from-pink-500/40 to-rose-500/40 backdrop-blur-lg rounded-3xl border border-white/30 shadow-2xl" style="transform: rotateY(-15deg) rotateZ(10deg) translateZ(-30px);"></div>
+            
+            <div class="absolute top-[20%] left-[5%] right-[5%] bottom-[5%] bg-white/80 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_30px_60px_rgba(0,0,0,0.15)] flex flex-col p-6" style="transform: translateZ(50px);">
+              <div class="flex justify-between items-center mb-6">
+                 <div class="flex gap-3 items-center">
+                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                       <iconify-icon icon="solar:magic-stick-linear" width="20"></iconify-icon>
+                    </div>
+                    <div>
+                       <div class="text-sm font-semibold text-slate-800">Generating Canvas</div>
+                       <div class="text-[10px] text-slate-500 uppercase tracking-widest">Processing Node</div>
+                    </div>
+                 </div>
+                 <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+              </div>
+              
+              <div class="flex-1 w-full bg-slate-100 rounded-xl border border-slate-200/50 overflow-hidden relative flex flex-col gap-2 p-3">
+                 <div class="w-full h-[60%] bg-slate-200 rounded-lg animate-pulse"></div>
+                 <div class="flex gap-2 h-[40%]">
+                     <div class="w-1/3 h-full bg-slate-200 rounded-lg animate-pulse" style="animation-delay: 100ms;"></div>
+                     <div class="w-1/3 h-full bg-slate-200 rounded-lg animate-pulse" style="animation-delay: 200ms;"></div>
+                     <div class="w-1/3 h-full bg-slate-200 rounded-lg animate-pulse" style="animation-delay: 300ms;"></div>
+                 </div>
+                 <div class="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500 w-[75%] shadow-[0_0_10px_rgba(168,85,247,0.6)]"></div>
+              </div>
+              
+              <div class="mt-5 flex flex-wrap gap-2">
+                 <div class="h-8 px-4 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-xs text-slate-500 font-medium">4K Render</div>
+                 <div class="h-8 px-4 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-xs text-slate-500 font-medium">Cinematic Lighting</div>
+                 <div class="h-8 px-4 bg-slate-100 border border-slate-200 rounded-full flex items-center justify-center text-xs text-slate-500 font-medium">Raytracing</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <main class="z-10 w-full relative">
+      <section class="flex flex-col w-full max-w-[1400px] border-slate-200/30 border-t mx-auto pt-20 pb-20 items-center justify-center overflow-hidden">
+        <p class="text-sm text-slate-400 font-semibold tracking-wide uppercase mb-12 px-6 text-center">Trusted by world-class creative studios</p>
+        <div class="w-full relative flex items-center overflow-hidden" style="mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);">
+          <div class="marquee-track flex w-max hover:[animation-play-state:paused]" style="animation-duration: 40s;">
+            <div class="flex items-center gap-16 md:gap-24 pr-16 md:pr-24">
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:camera-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">PixelDust</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:videocamera-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">StreamNet</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:gamepad-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">EpicWorlds</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:pen-new-square-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">Artify</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:music-note-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">SynthAudio</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-16 md:gap-24 pr-16 md:pr-24">
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:camera-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">PixelDust</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:videocamera-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">StreamNet</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:gamepad-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">EpicWorlds</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:pen-new-square-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">Artify</span>
+              </div>
+              <div class="flex items-center gap-3 text-slate-400 opacity-60 transition-all duration-300 hover:opacity-100 hover:text-slate-800 cursor-pointer">
+                <iconify-icon icon="solar:music-note-linear" width="32" height="32"></iconify-icon>
+                <span class="text-2xl font-semibold tracking-tight">SynthAudio</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="max-w-[1400px] mr-auto ml-auto pt-20 pr-6 pb-32 pl-6">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl md:text-5xl font-medium text-slate-900 tracking-tight mb-4">Complete Creative Control</h2>
+          <p class="text-lg text-slate-500 max-w-2xl mx-auto font-light">Direct models with precision, blend modalities effortlessly, and export production-ready assets.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 md:grid-rows-2 min-h-[800px] gap-x-8 gap-y-8">
+          <div class="glass-panel md:col-span-2 flex flex-col transition-all duration-1000 group rounded-[2rem] p-10 justify-between">
+            <div>
+              <div class="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center">
+                <iconify-icon icon="solar:magic-stick-linear" width="24" height="24" class="text-slate-700"></iconify-icon>
+              </div>
+              <div>
+                <h3 class="text-3xl font-medium text-[var(--primary)] mb-3 tracking-tight mt-4">Multi-Modal Synthesis</h3>
+                <p class="text-[var(--text-muted)] text-lg">Generate text-to-3D, video-to-video, and prompt-to-audio concurrently from a single interface.</p>
+              </div>
+            </div>
+            <div class="mt-10 flex flex-col md:flex-row gap-6 h-auto md:h-44">
+              <div class="flex-1 bg-white/60 border border-white/80 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shadow-sm min-h-[160px]">
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.4)_1px,transparent_1px)] bg-[size:20px_20px] opacity-40"></div>
+                <div class="flex justify-between items-center w-full mb-4 relative z-10">
+                  <div class="text-xs font-medium text-slate-500 tracking-wider uppercase">Render Status</div>
+                  <div class="flex gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-slate-500"></div><div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div></div>
+                </div>
+                <div class="flex items-end gap-1.5 h-full pt-4 relative z-10">
+                  <div class="bg-purple-400/30 w-full h-[80%] rounded-t-sm"></div>
+                  <div class="w-full bg-blue-400/50 rounded-t-sm h-[100%] relative"><div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.6)]"></div></div>
+                  <div class="w-full bg-pink-400/30 rounded-t-sm h-[60%]"></div>
+                  <div class="w-full bg-emerald-400/30 rounded-t-sm h-[40%]"></div>
+                </div>
+              </div>
+              <div class="w-full md:w-1/3 bg-white/60 border border-white/80 rounded-2xl p-5 flex flex-col gap-4 shadow-sm">
+                <div class="text-xs font-medium text-slate-500 tracking-wider uppercase mb-1">Asset Pipeline</div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-700"><iconify-icon icon="solar:box-linear" width="16" height="16"></iconify-icon></div>
+                  <div class="flex-1 space-y-2"><div class="h-1.5 w-full bg-slate-300 rounded-full"></div><div class="h-1.5 w-2/3 bg-slate-200 rounded-full"></div></div>
+                </div>
+                <div class="flex items-center gap-3 opacity-60">
+                  <div class="w-8 h-8 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500"><iconify-icon icon="solar:music-note-linear" width="16" height="16"></iconify-icon></div>
+                  <div class="flex-1 space-y-2"><div class="h-1.5 w-5/6 bg-slate-300 rounded-full"></div><div class="h-1.5 w-1/2 bg-slate-200 rounded-full"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel flex flex-col transition-all duration-1000 group rounded-[2rem] pt-10 pr-10 pb-10 pl-10 justify-between">
+            <div>
+              <div class="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center">
+                <iconify-icon icon="solar:gallery-wide-linear" width="24" height="24" class="text-slate-700"></iconify-icon>
+              </div>
+              <div>
+                <h3 class="text-2xl font-normal text-[var(--primary)] mb-3 tracking-tight mt-4">Universal Library</h3>
+                <p class="text-[var(--text-muted)] font-light">Organize, version, and share generated assets effortlessly.</p>
+              </div>
+            </div>
+            <div class="flex w-full h-44 mt-10 relative perspective-[1000px] items-end justify-center" style="mask-image: linear-gradient(180deg, transparent, black 40%, black 100%, transparent); -webkit-mask-image: linear-gradient(180deg, transparent, black 40%, black 100%, transparent);">
+              <div class="transform transition-transform duration-500 group-hover:-translate-y-4 bg-slate-50/50 w-[85%] h-24 border-slate-300/30 border rounded-xl absolute bottom-16 shadow-sm"></div>
+              <div class="transform transition-transform duration-500 group-hover:-translate-y-2 bg-slate-50/80 w-[92%] h-24 border-slate-200/50 border rounded-xl absolute bottom-8 shadow-md backdrop-blur-md"></div>
+              <div class="absolute w-full bottom-0 h-24 bg-white/80 border border-white/80 rounded-xl backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.08)] flex items-center px-6 gap-4 transform transition-transform duration-500">
+                <div class="flex bg-slate-50 w-12 h-12 border-slate-200 border rounded-xl shadow-inner items-center justify-center"><iconify-icon icon="solar:folder-with-files-linear" width="24" height="24" class="text-slate-500"></iconify-icon></div>
+                <div class="space-y-2.5 flex-1"><div class="h-2.5 bg-slate-300/80 w-1/2 rounded-full"></div><div class="h-2 w-1/3 bg-slate-200/80 rounded-full"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel flex flex-col transition-all duration-1000 group rounded-[2rem] p-10 justify-between">
+            <div>
+              <div class="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center">
+                <iconify-icon icon="solar:share-circle-linear" width="24" height="24" class="text-slate-700"></iconify-icon>
+              </div>
+              <div>
+                <h3 class="text-2xl font-medium text-[var(--primary)] mb-3 tracking-tight mt-4">Node-Based Workflows</h3>
+                <p class="text-[var(--text-muted)]">Connect models visually to build complex generative pipelines.</p>
+              </div>
+            </div>
+            <div class="mt-10 space-y-3">
+              <div class="flex items-center justify-between bg-white/70 border border-white p-4 rounded-xl shadow-sm backdrop-blur-md">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center"><iconify-icon icon="solar:videocamera-linear" width="16" height="16" class="text-slate-600"></iconify-icon></div>
+                  <div class="h-2.5 w-24 bg-slate-700 rounded-full"></div>
+                </div>
+                <div class="w-11 h-6 bg-slate-700 rounded-full relative shadow-inner"><div class="absolute right-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow border border-slate-200"></div></div>
+              </div>
+              <div class="flex items-center justify-between bg-white/40 border border-white/60 p-4 rounded-xl backdrop-blur-sm">
+                <div class="flex items-center gap-3.5">
+                  <div class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400"><iconify-icon icon="solar:music-notes-linear" width="16" height="16"></iconify-icon></div>
+                  <div class="h-2 w-28 bg-slate-400 rounded-full"></div>
+                </div>
+                <div class="w-11 h-6 bg-slate-200 rounded-full relative shadow-inner border border-slate-300"><div class="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow-sm border border-slate-100"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel md:col-span-2 flex flex-col transition-all duration-1000 group rounded-[2rem] p-10 gap-6">
+            <div>
+              <div class="flex bg-slate-100 w-12 h-12 border-slate-200 border rounded-full shadow-inner items-center justify-center">
+                <iconify-icon icon="solar:server-square-linear" width="24" height="24" class="text-slate-700"></iconify-icon>
+              </div>
+              <h3 class="text-2xl font-medium text-slate-900 mb-2 mt-4">Cloud Render Farm</h3>
+              <p class="text-slate-500 max-w-lg">Distributed rendering infrastructure ensuring ultra-fast generation times for 4K video and high-poly 3D models.</p>
+            </div>
+            <div class="mt-4 flex flex-col md:flex-row gap-5 h-auto md:h-48">
+              <div class="flex-[2] bg-white/60 border border-white/80 rounded-2xl relative overflow-hidden flex items-center justify-center shadow-sm min-h-[160px]">
+                <svg class="absolute inset-0 w-full h-full opacity-30" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M 15,30 L 40,60 L 65,35 L 85,75" stroke="#cbd5e1" stroke-width="0.5" fill="none" stroke-dasharray="2 2"></path></svg>
+                <div class="absolute top-[30%] left-[15%] w-3.5 h-3.5 rounded-full bg-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.4)] border border-white"></div>
+                <div class="absolute top-[60%] left-[40%] w-5 h-5 rounded-full bg-white border-2 border-slate-200 shadow-[0_0_20px_rgba(148,163,184,0.3)] flex items-center justify-center"><div class="w-2 h-2 bg-slate-500 rounded-full animate-ping"></div><div class="w-2 h-2 bg-slate-500 rounded-full absolute"></div></div>
+              </div>
+              <div class="flex-[1] flex flex-col gap-4">
+                <div class="bg-white/60 border border-white/80 rounded-xl p-5 flex-1 flex flex-col justify-center shadow-sm">
+                  <div class="text-xs font-medium text-slate-500 tracking-wider uppercase mb-1">Avg Frame Gen</div>
+                  <div class="flex items-baseline gap-1.5"><span class="text-3xl font-medium text-slate-800">42</span><span class="text-sm font-medium text-slate-500">ms</span></div>
+                  <div class="mt-3 h-1.5 w-full bg-slate-200 rounded-full overflow-hidden"><div class="h-full bg-blue-400 w-[85%] rounded-full"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="min-h-screen flex overflow-hidden bg-slate-50/30 pt-32 pb-32 relative items-center justify-center">
+        <div class="absolute top-16 left-1/2 -translate-x-1/2 text-center z-20 px-6">
+          <h2 class="text-4xl md:text-5xl font-medium text-slate-900 tracking-tight mb-4">Connects with your workflow</h2>
+          <p class="text-lg text-slate-500">Lumina integrates seamlessly with the creative tools your team already uses.</p>
+        </div>
+        <div class="md:scale-75 lg:scale-100 transition-transform duration-700 ease-out flex w-[800px] h-[800px] mt-40 relative scale-[0.45] items-center justify-center">
+          <div class="relative z-10 w-40 h-40 rounded-full bg-[#eef2f6] border border-white/80 shadow-[0_25px_60px_rgba(15,23,42,0.08),inset_8px_8px_18px_rgba(255,255,255,0.95),inset_-10px_-10px_20px_rgba(148,163,184,0.12)] flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full bg-white/40 blur-xl scale-110 pointer-events-none"></div>
+            <div class="relative w-[112px] h-[112px] rounded-full border border-slate-300/40 bg-gradient-to-br from-white to-slate-100 shadow-[inset_0_2px_10px_rgba(255,255,255,0.95),0_10px_24px_rgba(15,23,42,0.04)] flex items-center justify-center">
+              <iconify-icon icon="solar:palette-bold" width="32" height="32" class="text-slate-800"></iconify-icon>
+            </div>
+            <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 text-center">
+              <span class="text-[11px] uppercase tracking-[0.35em] text-slate-400 font-medium">LUMINA</span>
+            </div>
+          </div>
+          <div class="absolute inset-0 rounded-full border border-slate-900/[0.03] animate-orbit-track">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-24 flex items-center justify-center">
+              <div class="animate-orbit-card w-full">
+                <div class="bg-white/70 backdrop-blur-xl border border-white/60 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform"><iconify-icon icon="solar:pen-linear" width="20" height="20" class="text-slate-600"></iconify-icon></div>
+                    <div><h3 class="text-sm font-medium text-slate-800 tracking-tight">Design & UI</h3><p class="text-xs text-slate-500 font-medium">Figma, Adobe XD</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-64 h-24 flex items-center justify-center">
+              <div class="animate-orbit-card w-full">
+                <div class="bg-white/70 backdrop-blur-xl border border-white/60 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform"><iconify-icon icon="solar:video-frame-linear" width="20" height="20" class="text-slate-600"></iconify-icon></div>
+                    <div><h3 class="text-sm font-medium text-slate-800 tracking-tight">Video Editing</h3><p class="text-xs text-slate-500 font-medium">Premiere, DaVinci</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-64 h-24 flex items-center justify-center">
+              <div class="animate-orbit-card w-full">
+                <div class="bg-white/70 backdrop-blur-xl border border-white/60 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform"><iconify-icon icon="solar:box-linear" width="20" height="20" class="text-slate-600"></iconify-icon></div>
+                    <div><h3 class="text-sm font-medium text-slate-800 tracking-tight">3D & Spatial</h3><p class="text-xs text-slate-500 font-medium">Blender, Unreal</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-64 h-24 flex items-center justify-center">
+              <div class="animate-orbit-card w-full">
+                <div class="bg-white/70 backdrop-blur-xl border border-white/60 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.04)] group">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform"><iconify-icon icon="solar:music-note-linear" width="20" height="20" class="text-slate-600"></iconify-icon></div>
+                    <div><h3 class="text-sm font-medium text-slate-800 tracking-tight">Audio & SFX</h3><p class="text-xs text-slate-500 font-medium">Ableton, Logic Pro</p></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="absolute inset-[180px] border border-slate-900/[0.02] rounded-full pointer-events-none"></div>
+          <div class="absolute inset-[280px] border border-slate-900/[0.015] rounded-full pointer-events-none"></div>
+        </div>
+      </section>
+
+      <section class="max-w-[1400px] mx-auto px-6 pb-32 pt-10">
+        <div class="text-center mb-16">
+          <span class="inline-flex items-center px-4 py-1.5 rounded-full border border-slate-200 bg-white/70 text-[11px] tracking-[0.2em] uppercase text-slate-500 mb-5">
+            Testimonials
+          </span>
+          <h2 class="text-3xl md:text-4xl lg:text-5xl font-medium text-slate-900 tracking-tight mb-4">
+            Loved by engineering leaders
+          </h2>
+          <p class="max-w-2xl mx-auto text-slate-500 text-base md:text-lg leading-relaxed font-light">
+            Teams rely on Orion to reduce noise, accelerate incident response, and bring clarity to complex operations.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass-panel p-8 rounded-[2rem] flex flex-col justify-between min-h-[320px] bg-white/70">
+            <div>
+              <div class="flex items-center justify-between mb-7">
+                <div class="flex gap-1 text-amber-400">
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                </div>
+                <div class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  5.0 Rating
+                </div>
+              </div>
+              <p class="text-slate-700 text-[17px] leading-8 font-light mb-10">
+                "Orion cut our MTTR by 60% in the first month. The AI root cause analysis is like having our best principal engineer on-call 24/7."
+              </p>
+            </div>
+            <div class="flex items-center gap-4 pt-6 border-t border-slate-200/70">
+              <div class="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center overflow-hidden shadow-sm flex-shrink-0">
+                <img src="https://i.pravatar.cc/150?u=sarah" alt="Sarah Jenkins" class="w-full h-full object-cover mix-blend-luminosity opacity-80">
+              </div>
+              <div>
+                <p class="text-sm font-medium text-slate-900">Sarah Jenkins</p>
+                <p class="text-sm text-slate-500">VP Engineering, DataFlow</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-8 rounded-[2rem] flex flex-col justify-between min-h-[320px] bg-white/70">
+            <div>
+              <div class="flex items-center justify-between mb-7">
+                <div class="flex gap-1 text-amber-400">
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                </div>
+                <div class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  Enterprise
+                </div>
+              </div>
+              <p class="text-slate-700 text-[17px] leading-8 font-light mb-10">
+                "We replaced three legacy monitoring tools with Orion. The interface is beautiful, but the automated runbooks are the real game changer."
+              </p>
+            </div>
+            <div class="flex items-center gap-4 pt-6 border-t border-slate-200/70">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-sm flex-shrink-0"></div>
+              <div>
+                <p class="text-sm font-medium text-slate-900">Michael Chang</p>
+                <p class="text-sm text-slate-500">Director of SRE, Acme Corp</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-8 rounded-[2rem] flex flex-col justify-between min-h-[320px] bg-white/70">
+            <div>
+              <div class="flex items-center justify-between mb-7">
+                <div class="flex gap-1 text-amber-400">
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                  <iconify-icon icon="solar:star-bold" width="18" height="18"></iconify-icon>
+                </div>
+                <div class="text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                  Fast Impact
+                </div>
+              </div>
+              <p class="text-slate-700 text-[17px] leading-8 font-light mb-10">
+                "Alert fatigue was destroying our team's morale. Orion grouped the noise so perfectly that our paging volume dropped immediately."
+              </p>
+            </div>
+            <div class="flex items-center gap-4 pt-6 border-t border-slate-200/70">
+              <div class="w-12 h-12 rounded-full overflow-hidden shadow-sm flex-shrink-0">
+                <img src="https://i.pravatar.cc/150?img=47" alt="Elena Rostova" class="w-full h-full object-cover grayscale">
+              </div>
+              <div>
+                <p class="text-sm font-medium text-slate-900">Elena Rostova</p>
+                <p class="text-sm text-slate-500">Platform Lead, Sentinel</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="max-w-[1200px] mx-auto px-6 pb-32 pt-20">
+        <div class="text-center mb-16">
+          <h2 class="text-4xl font-medium text-slate-900 tracking-tight mb-4">Pricing for Creatives</h2>
+          <p class="text-lg text-slate-500 font-light">Start rendering for free. Scale to cinematic resolution.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="glass-panel p-10 rounded-[2rem] flex flex-col border border-white/60">
+            <h3 class="text-xl font-medium text-slate-900 mb-2">Creator</h3>
+            <div class="mb-6"><span class="text-4xl font-semibold text-slate-900">$0</span><span class="text-slate-500">/mo</span></div>
+            <p class="text-sm text-slate-500 mb-8 font-light">Perfect for independent artists starting with Gen AI.</p>
+            <ul class="space-y-4 mb-10 flex-1">
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>100 Generations/mo</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>1080p Video Export</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>Standard Queue</li>
+            </ul>
+            <button class="w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-white/50 transition-colors">Start Free</button>
+          </div>
+
+          <div class="glass-panel p-10 rounded-[2rem] flex flex-col bg-white/70 border-blue-200 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-[40px]"></div>
+            <div class="text-xs font-semibold tracking-wider uppercase text-purple-600 mb-2">Most Popular</div>
+            <h3 class="text-xl font-medium text-slate-900 mb-2">Studio</h3>
+            <div class="mb-6"><span class="text-4xl font-semibold text-slate-900">$49</span><span class="text-slate-500">/seat/mo</span></div>
+            <p class="text-sm text-slate-500 mb-8 font-light">Advanced workflows for professional creative teams.</p>
+            <ul class="space-y-4 mb-10 flex-1">
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-purple-500"></iconify-icon>Unlimited Generations</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-purple-500"></iconify-icon>4K Spatial Video</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-purple-500"></iconify-icon>Priority Fast Queue</li>
+            </ul>
+            <button class="w-full py-3 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors shadow-lg">Start Free Trial</button>
+          </div>
+
+          <div class="glass-panel p-10 rounded-[2rem] flex flex-col border border-white/60">
+            <h3 class="text-xl font-medium text-slate-900 mb-2">Enterprise</h3>
+            <div class="mb-6"><span class="text-4xl font-semibold text-slate-900">Custom</span></div>
+            <p class="text-sm text-slate-500 mb-8 font-light">Custom models and API access for massive scale.</p>
+            <ul class="space-y-4 mb-10 flex-1">
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>Dedicated Render Nodes</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>Custom LoRA Training</li>
+              <li class="flex items-center gap-3 text-sm text-slate-700"><iconify-icon icon="solar:check-circle-linear" class="text-blue-500"></iconify-icon>API / Integration Support</li>
+            </ul>
+            <button class="w-full py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-white/50 transition-colors">Contact Sales</button>
+          </div>
+        </div>
+      </section>
+
+      <footer class="bg-white/80 backdrop-blur-md border-t border-slate-200 pt-10 pb-10 relative z-10">
+        <div class="max-w-[1400px] mx-auto px-6">
+          <div class="pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <p class="text-sm text-slate-400 font-light">© 2026 Lumina AI Studio. All rights reserved.</p>
+            <div class="flex gap-6 items-center">
+              <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><iconify-icon icon="solar:twitter-linear" width="20" height="20"></iconify-icon></a>
+              <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><iconify-icon icon="solar:link-circle-linear" width="20" height="20"></iconify-icon></a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+      const canvas = document.getElementById('webgl-canvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      const scene = new THREE.Scene();
+      const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+      const geometry = new THREE.PlaneGeometry(2, 2);
+      const uniforms = {
+          uTime: { value: 0 },
+          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+      };
+      const material = new THREE.ShaderMaterial({
+          uniforms: uniforms,
+          vertexShader: `
+              varying vec2 vUv;
+              void main() {
+                  vUv = uv;
+                  gl_Position = vec4(position, 1.0);
+              }
+          `,
+          fragmentShader: `
+              uniform float uTime;
+              uniform vec2 uResolution;
+              varying vec2 vUv;
+              void main() {
+                  vec2 uv = gl_FragCoord.xy / uResolution.xy;
+                  vec3 color = vec3(0.96, 0.97, 0.99);
+                  color.r += sin(uv.x * 3.0 + uTime * 0.4) * 0.03;
+                  color.b += cos(uv.y * 2.0 + uTime * 0.3) * 0.04;
+                  color.g += sin(uv.x * uv.y * 4.0 - uTime * 0.2) * 0.02;
+                  gl_FragColor = vec4(color, 1.0);
+              }
+          `
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      function animate() {
+          requestAnimationFrame(animate);
+          uniforms.uTime.value += 0.01;
+          renderer.render(scene, camera);
+      }
+      animate();
+      window.addEventListener('resize', () => {
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+      });
+    </script>
+</body>
+</html>
